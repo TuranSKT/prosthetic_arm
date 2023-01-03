@@ -19,7 +19,7 @@ vid_width, vid_height = 640, 480
 SRC_CAM= "v4l2src device=/dev/video0 ! videoscale"
 CAPS_VID =f"videoconvert ! video/x-raw,width={vid_width},height={vid_height},framerate=30/1"
 ENC = "x264enc tune=zerolatency bitrate=1000 speed-preset=superfast ! h264parse ! rtph264pay"
-UDP_SINK = "udpsink host=192.168.0.31 port=5000"
+UDP_SINK = "udpsink host=IPADDRESS port=5000"
 RGB_CONV = "videoconvert ! video/x-raw,format=RGB ! videoconvert"
 MAIN_SINK = "appsink name=main-sink emit-signals=true max-buffers=1 drop=true"
 gst_pipeline = f"""{SRC_CAM} ! {CAPS_VID} ! tee name=t ! queue ! {ENC} ! {UDP_SINK}
