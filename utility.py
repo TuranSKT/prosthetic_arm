@@ -25,7 +25,7 @@ class SVG:
             for line in lines:
                 p1 = self.landmarks_dict[str(line[0])]
                 p2 = self.landmarks_dict[str(line[1])]
-                ET.SubElement(svg_root, "line", x1=str(p1[0]), y1=str(p1[1]), x2=str(p2[0]), y2=str(p2[1]))
+                ET.SubElement(svg_root, "line", x1=str(p1[0]), y1=str(p1[1]), x2=str(p2[0]), y2=str(p2[1]), stroke="red", stroke_width="3")
 
         # Convert the ElementTree object to a string and return it
         return ET.tostring(svg_root, encoding="unicode", method="xml")
