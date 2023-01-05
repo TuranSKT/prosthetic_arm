@@ -27,5 +27,3 @@ Note that the Gstreamer pipeline in `streamer.py` has been inspired by the Googl
 - Gstreamer
 - MediaPipe
 - Raspberry Pi GPIO library (for the prosthetic arm)
-
-
