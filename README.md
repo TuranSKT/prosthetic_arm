@@ -17,13 +17,29 @@ The repository contains the following files:</br>
 
 To run the code, use the following command:</br>
 
-```
-python streamer.py
+``` 
+python streamer.py 
 ```
 Note that the Gstreamer pipeline in `streamer.py` has been inspired by the Google Coral works.</br>
 
-## Dependencies
-
-- Gstreamer
-- MediaPipe
-- Raspberry Pi GPIO library (for the prosthetic arm)
+## Requirements 
+### Server side
+Python
+``` 
+sudo apt-get install python3-venv python3-dev 
+```
+Gstreamer 
+``` 
+sudo apt-get install gstreamer1.0-tools gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly gstreamer1.0-plugins-bad gstreamer1.0-libav python3-gi python3-gi-cairo gir1.2-gtk-3.0 gi libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gobject-introspection python3-gst-1.0 
+```
+``` 
+pip install PyGObject 
+```
+Hand detection (Mediapipe)
+``` 
+pip install mediapipe 
+```
+GPIO 
+``` 
+pip install RPi.GPIO 
+```
