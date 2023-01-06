@@ -10,8 +10,6 @@ from gi.repository import GLib, GObject, Gst, GstBase, Gtk
 from utility import SVG, flip_array
 
 import mediapipe as mp
-mp_drawing = mp.solutions.drawing_utils
-mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
 
 Gst.init(None)
@@ -86,7 +84,7 @@ class GstPipeline:
             raise RuntimeError("Could not map buffer data!")
         else:
             array = np.ndarray(
-                    shape=(480,640,3),
+                    shape=(self.source_size[1],self.source_size[0],3),
                     dtype=np.uint8,
                     buffer=map_info.data)
         return array, map_info
@@ -134,7 +132,7 @@ class GstPipeline:
 
             with mp_hands.Hands(
                 static_image_mode=True,
-                max_num_hands=2,
+                max_num_hands=1,
                 min_detection_confidence=0.7) as hands:
                     results = hands.process(np_frame)
                     if not results.multi_hand_landmarks:
@@ -144,15 +142,13 @@ class GstPipeline:
                         dict_points = self.get_hand_landmarks_position(hand_landmarks)
                         dict_lines = self.get_hand_connections_dict()
                         svg = self.generate_svg(dict_points, dict_lines)
-                    if self.overlay:
                         self.overlay.set_property('data', svg)
-            #bus = self.pipeline.get_bus()
+            bus = self.pipeline.get_bus()
             gstbuffer.unmap(map_info)
-
 
 def run_pipeline():
     ip_addr = '***REMOVED***'
-    vid_width, vid_height = 640, 480
+    vid_width, vid_height = 176,144
     src_size=(vid_width, vid_height)
 
     #Main tee
