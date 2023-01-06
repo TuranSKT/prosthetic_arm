@@ -18,14 +18,14 @@ class SVG:
 
         # Add a circle element for each point in the dictionary
         for landmark, coords in self.landmarks_dict.items():
-            ET.SubElement(svg_root, "circle", cx=str(coords[0]), cy=str(coords[1]), r="5")
+            ET.SubElement(svg_root, "circle", cx=str(coords[0]), cy=str(coords[1]), r="2")
 
         # Add a line element for each line in the dictionary
         for connection, lines in self.connections_dict.items():
             for line in lines:
                 p1 = self.landmarks_dict[str(line[0])]
                 p2 = self.landmarks_dict[str(line[1])]
-                ET.SubElement(svg_root, "line", x1=str(p1[0]), y1=str(p1[1]), x2=str(p2[0]), y2=str(p2[1]), stroke="red", stroke_width="3")
+                ET.SubElement(svg_root, "line", x1=str(p1[0]), y1=str(p1[1]), x2=str(p2[0]), y2=str(p2[1]), stroke="red", stroke_width="1")
 
         # Convert the ElementTree object to a string and return it
         return ET.tostring(svg_root, encoding="unicode", method="xml")
