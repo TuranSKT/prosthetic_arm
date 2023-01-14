@@ -1,5 +1,6 @@
 import sys
 import threading
+import argparse
 import numpy as np
 import gi
 gi.require_version('Gst', '1.0')
@@ -7,15 +8,32 @@ gi.require_version('GstBase', '1.0')
 gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, GObject, Gst, GstBase, Gtk
 
-from utility import SVG, flip_array
+from utility import SVG, flip_array, state_detector, process_landmarks, PROSTHETIC_HAND_GPIO
 
 import mediapipe as mp
 mp_hands = mp.solutions.hands
 
 Gst.init(None)
+class LandmarkBuffer:
+    def __init__(self):
+        self.landmarks_mean = []
+
+    def get_landmarks_mean(self):
+        return self.landmarks_mean
+
+    def reset(self):
+        self.landmarks_mean = []
+
+    def update_landmarks_mean(self, new_landmarks):
+        if len(self.landmarks_mean) == 0:
+            self.landmarks_mean = new_landmarks
+        else: 
+            #self.landmarks_mean = [(x1+x2)/2 for (x1,x2) in zip(self.landmarks_mean, new_landmarks)]
+            self.landmarks_mean = [[(x1+x2)/2, (y1+y2)/2, (z1+z2)/2] for (x1,y1,z1), (x2,y2,z2) in zip(self.landmarks_mean, new_landmarks)]
+
 
 class GstPipeline:
-    def __init__(self, pipeline, src_size):
+    def __init__(self, pipeline, src_size, ext, flex, buff):
         self.running = False
         self.gstsample = None
         self.sink_size = None
@@ -23,7 +41,10 @@ class GstPipeline:
         self.source_size = src_size
         self.pipeline = Gst.parse_launch(pipeline)
         self.overlay = self.pipeline.get_by_name('overlay')
-
+        self.extension_thresh = ext
+        self.flexion_thresh = flex
+        self.buffer_max_size = buff
+        self.landmark_buffer_nb = 0
         appsink = self.pipeline.get_by_name('appsink')
         appsink.connect('new-preroll', self.on_new_sample, True)
         appsink.connect('new-sample', self.on_new_sample, False)
@@ -88,7 +109,7 @@ class GstPipeline:
                     dtype=np.uint8,
                     buffer=map_info.data)
         return array, map_info
-    
+
     def get_hand_landmarks_position(self, hand_landmarks):
         image_width, image_height = self.source_size[0], self.source_size[1]
         hand_landmarks_dict = {}
@@ -98,7 +119,7 @@ class GstPipeline:
                 hand_landmarks.landmark[landmark_type].y * image_height
             ]
         return hand_landmarks_dict
-    
+
     def get_hand_connections_dict(self):
         hand_connections_dict = {
             "hand_palm_connections": [(0, 1), (0, 5), (9, 13), (13, 17), (5, 9), (0, 17)],
@@ -109,12 +130,14 @@ class GstPipeline:
             "hand_pinky_finger_connections": [(17, 18), (18, 19), (19, 20)],
         }
         return hand_connections_dict
-    
+
     def generate_svg(self, dict_points, dict_lines):
         return SVG(dict_points, dict_lines, self.source_size).create_svg()
-    
+
     def inference_loop(self):
         loop_bool = True
+        gpio_thread = PROSTHETIC_HAND_GPIO()
+        landmark_buffer = LandmarkBuffer()
         while loop_bool:
             with self.condition:
                 while not self.gstsample and self.running:
@@ -127,7 +150,7 @@ class GstPipeline:
             # Passing Gst.Buffer as input tensor avoids 2 copies of it.
             gstbuffer = gstsample.get_buffer()
 
-            # Convert buffer to numpy frame 
+            # Convert buffer to numpy frame
             np_frame, map_info = self.buffer2array(gstbuffer)
 
             with mp_hands.Hands(
@@ -135,18 +158,31 @@ class GstPipeline:
                 max_num_hands=1,
                 min_detection_confidence=0.7) as hands:
                     results = hands.process(np_frame)
-                    if not results.multi_hand_landmarks:
-                            continue
-                    print(results.multi_handedness)
-                    for hand_landmarks in results.multi_hand_landmarks:
+                    landmarks = results.multi_hand_landmarks
+                    if not landmarks :
+                        continue
+                    #print(landmarks)
+                    landmark_buffer.update_landmarks_mean(process_landmarks(landmarks,
+                            self.source_size[1],
+                            self.source_size[0]))
+                    if self.landmark_buffer_nb == self.buffer_max_size:
+                        states = state_detector(landmark_buffer.get_landmarks_mean(), 
+                            self.extension_thresh, 
+                            self.flexion_thresh)
+                        gpio_thread.move_motors(states)
+                        landmark_buffer.reset()
+                        self.landmark_buffer_nb = 0
+                        print(states)
+                    for hand_landmarks in landmarks:
                         dict_points = self.get_hand_landmarks_position(hand_landmarks)
                         dict_lines = self.get_hand_connections_dict()
                         svg = self.generate_svg(dict_points, dict_lines)
                         self.overlay.set_property('data', svg)
             bus = self.pipeline.get_bus()
             gstbuffer.unmap(map_info)
+            self.landmark_buffer_nb += 1
 
-def run_pipeline():
+def run_pipeline(ext, flex, buff):
     ip_addr = '***REMOVED***'
     vid_width, vid_height = 176,144
     src_size=(vid_width, vid_height)
@@ -160,7 +196,7 @@ def run_pipeline():
     #stream_enc = "jpegenc ! rtpjpegpay"
     stream_enc = 'x264enc tune=zerolatency bitrate=1000 speed-preset=superfast'
     stream_udp = f'udpsink host={ip_addr} port=5000'
-    
+
     #Inference tee
     sink_caps = f'video/x-raw,format=RGB'
     sink_element = 'appsink name=appsink emit-signals=true max-buffers=1 drop=true'
@@ -174,9 +210,14 @@ def run_pipeline():
         '''
 
     #print('Gstreamer pipeline:\n', pipeline)
-    pipeline = GstPipeline(pipeline, src_size)
+    pipeline = GstPipeline(pipeline, src_size, ext, flex, buff)
     pipeline.run()
 
 
 if __name__ == '__main__':
-    run_pipeline()
+    parser = argparse.ArgumentParser(description='Detect objects from webcam images')
+    parser.add_argument('-min', '--extension_threshold', type=float, default=0, help='Mininmum angle threshold')
+    parser.add_argument('-max', '--flexion_threshold', type=float, default=0, help='Maximum angle threshold')
+    parser.add_argument('-buffer', '--max_nb_buffer', type=int, default=0, help='Number of loop to wait before computing landmarks means')
+    args = parser.parse_args()
+    run_pipeline(args.extension_threshold, args.flexion_threshold, args.max_nb_buffer)
