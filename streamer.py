@@ -183,7 +183,7 @@ class GstPipeline:
             self.landmark_buffer_nb += 1
 
 def run_pipeline(ext, flex, buff):
-    ip_addr = '192.168.0.31'
+    ip_addr = '192.XXX.X.XX'
     vid_width, vid_height = 176,144
     src_size=(vid_width, vid_height)
 
