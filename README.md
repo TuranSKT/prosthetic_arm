@@ -1,29 +1,32 @@
 # Prosthetic Arm
-
 This repository contains a personal project of mine which is a prosthetic arm that can copy the movements of a subject using a webcam and a Raspberry Pi4. </br>
 The ultimate goal is to replicate the movements on a robotic arm using servo motors. </br>
-
+<img src="/images/header.png" width="50%" height="50%">
 ## Contents
 
-The repository contains the following files:</br>
+The following files are included in this repository:</br>
 
-- `streamer.py`: This script uses a Gstreamer pipeline to stream the video from a webcam (Logitech c930e) on a Raspberry Pi to a PC in a local network. It also performs hand and finger detection using the MediaPipe of Google and draws hand landmarks directly on the streamed video, so that they can be seen on the client side.</br>
+- `streamer.py`: This script uses a Gstreamer pipeline (inspired by the Google Coral example) to captures video from a device (Logitech c930e webcam) and then divide the video stream into two trees. The first one overlays the video with an SVG image and then sends from a Raspberry Pi to a network local address. The second one is filters the video and then renders it to a video sink, where the main inference loop happens and the overlay object is created. The main loop performs hand and finger detection using Google's MediaPipe and draws hand landmarks directly on the streamed video, allowing for real-time visualization on the client side. 
+Meanwhile landmarks are analysed in real-time to compute angles that help to determine finger states (extension, flexion and middle). </br>
 
-- `utility.py`: This file contains some utility functions, including the `SVG` class that allows to draw SVG landmarks.</br>
+- `utility.py`: This file contains utility functions.</br>
 
-- `prosthetic_arm.py`: This file contains some basic GPIO-related commands to control servo motors and move a robotic arm plugged to the Raspberry Pi.</br>
+- `prosthetic_arm.py`: This file contains basic commands for controlling servo motors and moving a robotic arm connected to the Raspberry Pi using GPIO. It is completely independant from the other previous files.</br>
 
 ## Usage
-
-To run the code, use the following command:</br>
-
+Example of usage :</br>
 ``` 
-python streamer.py 
+# (Server side)
+python streamer.py -min 0.1 -max 1 -buffer 1
 ```
-Note that the Gstreamer pipeline in `streamer.py` has been inspired by the Google Coral works.</br>
-
+-buffer: number of frames to wait before computing fingers state analyses. The mean coordinnate of each landmarks is calculated over "-buffer" number of frames.</br>
+-min: min angle from which the state of the finger is considered as "extension"</br>
+-max: max angle from which the state of the finger is considered as "flexion". </br>
+```
+# (Client side) To visualise the inference output
+gst-launch-1.0 -v udpsrc port=5000 ! application/x-rtp, payload=96 ! rtph264depay ! decodebin ! videoconvert ! autovideosink
+```
 ## Requirements 
-### Server side
 Python
 ``` 
 sudo apt-get install python3-venv python3-dev 
@@ -43,3 +46,22 @@ GPIO
 ``` 
 pip install RPi.GPIO 
 ```
+## Hardware 
+Raspberry Pi 4 (8GB)</br>
+Logitech c930e webcam</br>
+Prosthetic arm with 5 SG90 servos</br>
+
+Asus ROG Zephyrus G14 GA401IV</br>
+CPU : AMD Ryzen 9 4900HS </br>
+iGPU : AMD ATI 04:00.0 Renoir</br>
+GPU : NVIDIA GeForce RTX 2060 M</br>
+OS : Pop_OS 22.04</br>
+
+## External links 
+Mediapipe API</br>
+https://google.github.io/mediapipe/solutions/hands.html</br>
+Google example use of Gstreamer pipeline (Coral)</br>
+https://github.com/google-coral/examples-camera/blob/master/gstreamer/gstreamer.py
+Prosthetic arm 3D model
+https://www.thingiverse.com/thing:4807141
+
