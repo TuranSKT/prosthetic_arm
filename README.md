@@ -50,7 +50,7 @@ pip install RPi.GPIO
 ## Hardware 
 Raspberry Pi 4 (8GB)</br>
 Logitech c930e webcam</br>
-Robotic arm (with servo motors)</br>
+Prosthetic arm with 5 SG90 servos</br>
 
 Asus ROG Zephyrus G14 GA401IV</br>
 CPU : AMD Ryzen 9 4900HS </br>
@@ -63,3 +63,6 @@ Mediapipe API</br>
 https://google.github.io/mediapipe/solutions/hands.html</br>
 Google example use of Gstreamer pipeline (Coral)</br>
 https://github.com/google-coral/examples-camera/blob/master/gstreamer/gstreamer.py
+Prosthetic arm 3D model
+https://www.thingiverse.com/thing:4807141
+
