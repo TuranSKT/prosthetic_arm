@@ -7,13 +7,12 @@ The ultimate goal is to replicate the movements on a robotic arm using servo mot
 
 The following files are included in this repository:</br>
 
-- `streamer.py`: This script uses a Gstreamer pipeline to captures video from a device (Logitech c930e webcam) and then divide the video stream into two trees. The first one overlays the video with an SVG image and then sends from a Raspberry Pi to a network local address. The second one is filters the video and then renders it to a video sink, where the main inference loop happens and the overlay object is created. The main loop performs hand and finger detection using Google's MediaPipe and draws hand landmarks directly on the streamed video, allowing for real-time visualization on the client side. 
+- `streamer.py`: This script uses a Gstreamer pipeline (inspired by the Google Coral example) to captures video from a device (Logitech c930e webcam) and then divide the video stream into two trees. The first one overlays the video with an SVG image and then sends from a Raspberry Pi to a network local address. The second one is filters the video and then renders it to a video sink, where the main inference loop happens and the overlay object is created. The main loop performs hand and finger detection using Google's MediaPipe and draws hand landmarks directly on the streamed video, allowing for real-time visualization on the client side. 
 Meanwhile landmarks are analysed in real-time to compute angles that help to determine finger states (extension, flexion and middle). 
-`streamer.py` has 3 arguments : 
--buffer: number of frames to wait before computing fingers state analyses. The mean coordinnate of each landmarks is calculated over `buffer` number of frames.
--min: min angle from which the state of the finger is considered as "extension"
+`streamer.py` has 3 arguments : </br>
+-buffer: number of frames to wait before computing fingers state analyses. The mean coordinnate of each landmarks is calculated over `buffer` number of frames.</br>
+-min: min angle from which the state of the finger is considered as "extension"</br>
 -max: max angle from which the state of the finger is considered as "flexion". </br>
-the Gstreamer pipeline in `streamer.py` has been inspired by the Google Coral work
 
 - `utility.py`: This file contains utility functions.</br>
 
