@@ -5,25 +5,31 @@ The ultimate goal is to replicate the movements on a robotic arm using servo mot
 
 ## Contents
 
-The repository contains the following files:</br>
+The following files are included in this repository:</br>
 
-- `streamer.py`: This script uses a Gstreamer pipeline to stream the video from a webcam (Logitech c930e) on a Raspberry Pi to a PC in a local network. It also performs hand and finger detection using the MediaPipe API from Google and draws hand landmarks directly on the streamed video, so that they can be seen on the client side. Meanwhile landmarks are analysed in real-time (with --buffer set to 1) or over multiple frames (with --buffer > 1) to compute angles that help to determine finger states. Arguments -min and -max act as threshold to calibrate the sensibility of the arm. </br>
+- `streamer.py`: This script uses a Gstreamer pipeline to captures video from a device (Logitech c930e webcam) and then divide the video stream into two trees. The first one overlays the video with an SVG image and then sends from a Raspberry Pi to a network local address. The second one is filters the video and then renders it to a video sink, where the main inference loop happens and the overlay object is created. The main loop performs hand and finger detection using Google's MediaPipe and draws hand landmarks directly on the streamed video, allowing for real-time visualization on the client side. 
+Meanwhile landmarks are analysed in real-time to compute angles that help to determine finger states (extension, flexion and middle). 
+`streamer.py` has 3 arguments : 
+-buffer: number of frames to wait before computing fingers state analyses. The mean coordinnate of each landmarks is calculated over `buffer` number of frames.
+-min: min angle from which the state of the finger is considered as "extension"
+-max: max angle from which the state of the finger is considered as "flexion". </br>
+the Gstreamer pipeline in `streamer.py` has been inspired by the Google Coral work
 
 - `utility.py`: This file contains utility functions.</br>
 
-- `prosthetic_arm.py`: This file contains some basic GPIO-related commands to test servo motors and move the prosthetic arm plugged to the Pi4.</br>
+- `prosthetic_arm.py`: This file contains basic commands for controlling servo motors and moving a robotic arm connected to the Raspberry Pi using GPIO. It is completely independant from the other previous files.</br>
 
 ## Usage
-
 Example of usage :</br>
-
 ``` 
+# (Server side)
 python streamer.py -min 0.1 -max 1 -buffer 1
 ```
-Note that the Gstreamer pipeline in `streamer.py` has been inspired by the Google Coral work.</br>
-
+```
+# (Client side) To visualise the inference output
+gst-launch-1.0 -v udpsrc port=5000 ! application/x-rtp, payload=96 ! rtph264depay ! decodebin ! videoconvert ! autovideosink
+```
 ## Requirements 
-### Server side
 Python
 ``` 
 sudo apt-get install python3-venv python3-dev 
@@ -43,3 +49,19 @@ GPIO
 ``` 
 pip install RPi.GPIO 
 ```
+## Hardware 
+Raspberry Pi 4 (8GB)</br>
+Logitech c930e webcam</br>
+Robotic arm (with servo motors)</br>
+
+Asus ROG Zephyrus G14 GA401IV</br>
+CPU : AMD Ryzen 9 4900HS </br>
+iGPU : AMD ATI 04:00.0 Renoir</br>
+GPU : NVIDIA GeForce RTX 2060 M</br>
+OS : Pop_OS 22.04</br>
+
+## External links 
+Mediapipe API</br>
+https://google.github.io/mediapipe/solutions/hands.html</br>
+Google example use of Gstreamer pipeline (Coral)</br>
+https://github.com/google-coral/examples-camera/blob/master/gstreamer/gstreamer.py
