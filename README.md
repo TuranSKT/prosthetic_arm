@@ -27,25 +27,18 @@ python streamer.py -min 0.1 -max 1 -buffer 1
 gst-launch-1.0 -v udpsrc port=5000 ! application/x-rtp, payload=96 ! rtph264depay ! decodebin ! videoconvert ! autovideosink
 ```
 ## Requirements 
-Python
+System requirements
 ``` 
 sudo apt-get install python3-venv python3-dev 
 ```
-Gstreamer 
 ``` 
 sudo apt-get install gstreamer1.0-tools gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly gstreamer1.0-plugins-bad gstreamer1.0-libav python3-gi python3-gi-cairo gir1.2-gtk-3.0 gi libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gobject-introspection python3-gst-1.0 
 ```
+Python requirements
 ``` 
-pip install PyGObject 
+pip install requirements
 ```
-Hand detection (Mediapipe)
-``` 
-pip install mediapipe 
-```
-GPIO 
-``` 
-pip install RPi.GPIO 
-```
+
 ## Hardware 
 Raspberry Pi 4 (8GB)</br>
 Logitech c930e webcam</br>
