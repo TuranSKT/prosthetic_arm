@@ -1,6 +1,6 @@
 # Prosthetic Arm
-This repository contains a personal project of mine which is a prosthetic arm that can copy the movements of a subject using a webcam and a Raspberry Pi4. </br>
-The ultimate goal is to replicate the movements on a robotic arm using servo motors. </br>
+This repository contains a personal project of mine which is a prosthetic arm that can copy the movements of a subject using a webcam and a Raspberry Pi4. The ultimate goal is to replicate the movements on a robotic arm using servo motors. </br>
+**[On-going feature] Ability to use electrodes as inputs instead of a webcam.**
 <img src="/images/header.png" width="50%" height="50%">
 ## Contents
 
