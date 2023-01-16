@@ -61,7 +61,7 @@ OS : Pop_OS 22.04</br>
 Mediapipe API</br>
 https://google.github.io/mediapipe/solutions/hands.html</br>
 Google example use of Gstreamer pipeline (Coral)</br>
-https://github.com/google-coral/examples-camera/blob/master/gstreamer/gstreamer.py
-Prosthetic arm 3D model
-https://www.thingiverse.com/thing:4807141
+https://github.com/google-coral/examples-camera/blob/master/gstreamer/gstreamer.py</br>
+Prosthetic arm 3D model</br>
+https://www.thingiverse.com/thing:4807141</br>
 
