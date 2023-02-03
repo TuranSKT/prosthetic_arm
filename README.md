@@ -1,7 +1,12 @@
 # Prosthetic Arm
 This repository contains a personal project of mine which is a prosthetic arm that can copy the movements of a subject using a webcam and a Raspberry Pi4. The ultimate goal is to replicate the movements on a robotic arm using servo motors. </br>
 **[On-going feature] Ability to use electrodes as inputs instead of a webcam.**
-<img src="/images/header.png" width="50%" height="50%">
+<p align="center">
+  <img src="/images/header.png" width="30%" height="30%">
+  <img src="/images/Pipeline.png" width="50%" height="30%">
+</p>
+<a href="https://www.youtube.com/watch?v=_LjxiPXpg8E&feature=youtu.be">Watch a test video of the project</a> 
+
 ## Contents
 
 The following files are included in this repository:</br>
