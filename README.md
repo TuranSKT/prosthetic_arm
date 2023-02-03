@@ -7,7 +7,7 @@ This repository contains a personal project of mine which is a prosthetic arm th
 The following files are included in this repository:</br>
 
 - `streamer.py`: This script uses a Gstreamer pipeline (inspired by the Google Coral example) to captures video from a device (Logitech c930e webcam) and then divide the video stream into two trees. The first one overlays the video with an SVG image and then sends from a Raspberry Pi to a network local address. The second one is filters the video and then renders it to a video sink, where the main inference loop happens and the overlay object is created. The main loop performs hand and finger detection using Google's MediaPipe and draws hand landmarks directly on the streamed video, allowing for real-time visualization on the client side. 
-Meanwhile landmarks are analysed in real-time to compute angles that help to determine finger states (extension, flexion and middle). </br>
+Meanwhile landmarks are analysed in real-time to compute angles that help to determine finger states (extension, and flexion). </br>
 
 - `utility.py`: This file contains utility functions.</br>
 
