@@ -43,12 +43,7 @@ pip install requirements
 Raspberry Pi 4 (8GB)</br>
 Logitech c930e webcam</br>
 Prosthetic arm with 5 SG90 servos</br>
-
-Asus ROG Zephyrus G14 GA401IV</br>
-CPU : AMD Ryzen 9 4900HS </br>
-iGPU : AMD ATI 04:00.0 Renoir</br>
-GPU : NVIDIA GeForce RTX 2060 M</br>
-OS : Pop_OS 22.04</br>
+2x 470μF capacitors
 
 ## External links 
 Mediapipe API</br>
