@@ -11,17 +11,19 @@ Meanwhile landmarks are analysed in real-time to compute angles that help to det
 
 - `utility.py`: This file contains utility functions.</br>
 
-- `prosthetic_arm.py`: This file contains basic commands for controlling servo motors and moving a robotic arm connected to the Raspberry Pi using GPIO. It is completely independant from the other previous files.</br>
+- `svg_landmarks`: SVG class. Creates a SVG object in which landmarks coordinates of the fingers are represented as circles (finger joints) and landmarks connections as lines (bones).</br>
+
+- `gpio_servos`: Everything related to the control of the servos.</br>
 
 ## Usage
 Example of usage :</br>
 ``` 
 # (Server side)
-python streamer.py -min 0.1 -max 1 -buffer 1
+python streamer.py -angle 0.1 -fps 30
 ```
--buffer: number of frames to wait before computing fingers state analyses. The mean coordinnate of each landmarks is calculated over "-buffer" number of frames.</br>
--min: min angle from which the state of the finger is considered as "extension"</br>
--max: max angle from which the state of the finger is considered as "flexion". </br>
+-angle: Angle threshold from which a fingers state is considered as flexion.</br>
+-fps: Set video input/output FPS "</br>
+
 ```
 # (Client side) To visualise the inference output
 gst-launch-1.0 -v udpsrc port=5000 ! application/x-rtp, payload=96 ! rtph264depay ! decodebin ! videoconvert ! autovideosink
