@@ -1,6 +1,5 @@
 import math
 
-
 def process_landmarks(landmarks, image_height, image_width):
     """
     Converts a list of landmarks into a list of lists of coordinates.
@@ -58,7 +57,6 @@ def thresholder(angle, threshold):
         return "flexion"
     else:
         return "extension"
-
 
 def state_detector(landmarks, threshold):
     '''

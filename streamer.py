@@ -20,8 +20,8 @@ from utility import state_detector, process_landmarks, get_hand_connections_dict
 from svg_landmarks import SVG
 from gpio_servos import PROSTHETIC_HAND_GPIO
 
-Gst.init(None)
 
+Gst.init(None)
 
 class GstPipeline:
     '''
@@ -37,7 +37,9 @@ class GstPipeline:
         self.pipeline = Gst.parse_launch(pipeline)
         self.overlay = self.pipeline.get_by_name('overlay')
         self.angle_threshold = angle
-        self.gpio_thread = PROSTHETIC_HAND_GPIO()
+        self.gpio_control = PROSTHETIC_HAND_GPIO()
+        self.gpio_thread = None
+        self.finger_states = None
 
         appsink = self.pipeline.get_by_name('appsink')
         appsink.connect('new-preroll', self.on_new_sample, True)
@@ -67,7 +69,7 @@ class GstPipeline:
         while GLib.MainContext.default().iteration(False):
             pass
         with self.condition:
-            self.gpio_thread.cleaner()
+            self.gpio_control.cleaner()
             self.running = False
             self.condition.notify_all()
         worker.join()
@@ -156,6 +158,12 @@ class GstPipeline:
             # Convert buffer to numpy frame
             np_frame, map_info = self.buffer2array(gstbuffer)
 
+            # Controls servos in a separate thread of the Gstreamer's one
+            if self.finger_states is not None: 
+                self.gpio_thread = threading.Thread(target=self.gpio_control.move_motors, 
+                        args=(self.finger_states,))
+                self.gpio_thread.start()
+
             # Mediapipe hand landmarks detection
             with mp_hands.Hands(
                 static_image_mode=True,
@@ -171,12 +179,8 @@ class GstPipeline:
 
                     # Given the detected landmarks assign a states
                     # "extension" or "flexion" to each finger
-                    states = state_detector(processed_landmarks, self.angle_threshold)
+                    self.finger_states = state_detector(processed_landmarks, self.angle_threshold)
 
-                    # Move servos of the prosthetic hand accordingly
-                    self.gpio_thread.move_motors(states)
-                    print(states)
-                    
                     # Draw SVG of the detected landmark as overlay client side
                     # Directly in the video stream
                     for hand_landmarks in landmarks:
@@ -185,16 +189,22 @@ class GstPipeline:
                         svg = svg_overlay.create_svg(dict_points, dict_lines)
                         self.overlay.set_property('data', svg)
 
+                    if self.gpio_thread is not None:
+                        self.gpio_thread.join()
+
             # Catch errors
             bus = self.pipeline.get_bus()
 
             # Free Gst ressources
             gstbuffer.unmap(map_info)
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-angle_thresh', '--angle_threshold', type=float, default=0.1, 
             help='Angle threshold from which a fingers state is considered as flexion')
+    parser.add_argument('-fps', '--inference_fps', type=float, default=30, 
+            help='inference framerate')
     args = parser.parse_args()
 
     ip_addr = '192.XXX.X.XX'
@@ -203,7 +213,7 @@ if __name__ == '__main__':
 
     #Main tee
     videosrc = '/dev/video0'
-    src_caps = f'video/x-raw,width={vid_width},height={vid_height},framerate=30/1'
+    src_caps = f'video/x-raw,width={vid_width},height={vid_height},framerate={int(args.inference_fps)}/1'
 
     #Streaming tee
     stream_enc = 'x264enc tune=zerolatency bitrate=1000 speed-preset=superfast'
@@ -220,7 +230,5 @@ if __name__ == '__main__':
         t. ! {leaky_q} ! rsvgoverlay name =overlay ! videoconvert ! {stream_enc} ! h264parse ! rtph264pay ! {stream_udp}
         t. ! {leaky_q} ! videoconvert ! {sink_caps} ! {sink_element}
         '''
-
-    print('Gstreamer pipeline:\n', pipeline)
     pipeline = GstPipeline(pipeline, src_size, args.angle_threshold)
     pipeline.run()

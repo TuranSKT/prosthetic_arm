@@ -1,5 +1,7 @@
-import RPi.GPIO as GPIO
 import time
+from gpiozero import Servo
+from gpiozero.pins.pigpio import PiGPIOFactory
+factory = PiGPIOFactory()
 
 
 class PROSTHETIC_HAND_GPIO:
@@ -8,39 +10,33 @@ class PROSTHETIC_HAND_GPIO:
     states (e.g {"index":"extension"})
     '''
     def __init__(self):
-        
-        # Set GPIO numbering mode
-        GPIO.setmode(GPIO.BOARD)
-
         # Set pin numbers for motors
         self.motor_pins = {
-            "thumb": 37,
-            "index": 35,
-            "middle": 33,
-            "ring": 31,
-            "pinky": 29}
+            "thumb": 26,
+            "index": 19,
+            "middle": 13,
+            "ring": 6,
+            "pinky": 5}
 
-        # Set up motor pins as outputs
-        for finger, pin in self.motor_pins.items():
-            GPIO.setup(pin, GPIO.OUT)
+        angle = 0.45
+        minPW, maxPW = (1-angle)/1000, (2+angle)/1000
 
-        # Create PWM objects for each motor
-        self.motors = {finger: GPIO.PWM(self.motor_pins[finger], 50) for finger in list(self.motor_pins.keys())}
+        thumb_angle = 0
+        thumb_minPW, thumb_maxPW = (1-thumb_angle)/1000, (2+thumb_angle)/1000
 
-        # Initialize servo duty cycles for each finger state
-        self.thumb_duty = {'extension': 5, 'flexion': 1}
-        self.other_fingers_duty = {'extension': 2, 'flexion': 12}
-        
+        self.motors = {finger: Servo(self.motor_pins[finger],
+            min_pulse_width = thumb_minPW if finger == "thumb" else minPW,
+            max_pulse_width = thumb_maxPW if finger == "thumb" else maxPW,
+            pin_factory=factory) for finger in self.motor_pins}
+
         self.initialise_servos()
-        time.sleep(0.3)
 
     def initialise_servos(self):
         # Start each motor at the appropriate initial position
         for finger, motor in self.motors.items():
-            if finger == "thumb":
-                motor.start(self.thumb_duty["extension"])
-            else:
-                motor.start(self.other_fingers_duty["extension"])
+            motor.min() if finger != "thumb" else motor.max()
+        print("Initialisation of the hands ...")
+        time.sleep(0.1)
 
     def move_motors(self, finger_states):
         '''
@@ -50,18 +46,16 @@ class PROSTHETIC_HAND_GPIO:
         '''
         # Update duty cycle for each finger
         for finger, state in finger_states.items():
-            if finger == "thumb":
-                self.motors["thumb"].ChangeDutyCycle(self.thumb_duty[state])
-            else:
-                self.motors[finger].ChangeDutyCycle(self.other_fingers_duty[state])
+            if state == "extension":
+                self.motors[finger].min() if finger != "thumb" else self.motors[finger].max()
+            else :
+                self.motors[finger].max() if finger != "thumb" else self.motors[finger].min()
+        time.sleep(0.05)
 
 
     def cleaner(self):
         ''' Stop servos properly'''
         print("Stopping servos")
-        self.initialise_servos()
         time.sleep(0.3)
-        self.motors["thumb"].stop()
         for finger, motor in self.motors.items():
-            motor.stop()
-        GPIO.cleanup()
+            motor.value = None
