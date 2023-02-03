@@ -7,21 +7,23 @@ This repository contains a personal project of mine which is a prosthetic arm th
 The following files are included in this repository:</br>
 
 - `streamer.py`: This script uses a Gstreamer pipeline (inspired by the Google Coral example) to captures video from a device (Logitech c930e webcam) and then divide the video stream into two trees. The first one overlays the video with an SVG image and then sends from a Raspberry Pi to a network local address. The second one is filters the video and then renders it to a video sink, where the main inference loop happens and the overlay object is created. The main loop performs hand and finger detection using Google's MediaPipe and draws hand landmarks directly on the streamed video, allowing for real-time visualization on the client side. 
-Meanwhile landmarks are analysed in real-time to compute angles that help to determine finger states (extension, flexion and middle). </br>
+Meanwhile landmarks are analysed in real-time to compute angles that help to determine finger states (extension, and flexion). </br>
 
 - `utility.py`: This file contains utility functions.</br>
 
-- `prosthetic_arm.py`: This file contains basic commands for controlling servo motors and moving a robotic arm connected to the Raspberry Pi using GPIO. It is completely independant from the other previous files.</br>
+- `svg_landmarks`: SVG class. Creates a SVG object in which landmarks coordinates of the fingers are represented as circles (finger joints) and landmarks connections as lines (bones).</br>
+
+- `gpio_servos`: Everything related to the control of the servos.</br>
 
 ## Usage
 Example of usage :</br>
 ``` 
 # (Server side)
-python streamer.py -min 0.1 -max 1 -buffer 1
+python streamer.py -angle 0.1 -fps 30
 ```
--buffer: number of frames to wait before computing fingers state analyses. The mean coordinnate of each landmarks is calculated over "-buffer" number of frames.</br>
--min: min angle from which the state of the finger is considered as "extension"</br>
--max: max angle from which the state of the finger is considered as "flexion". </br>
+-angle: Angle threshold from which a fingers state is considered as flexion.</br>
+-fps: Set video input/output FPS "</br>
+
 ```
 # (Client side) To visualise the inference output
 gst-launch-1.0 -v udpsrc port=5000 ! application/x-rtp, payload=96 ! rtph264depay ! decodebin ! videoconvert ! autovideosink
@@ -43,12 +45,7 @@ pip install requirements
 Raspberry Pi 4 (8GB)</br>
 Logitech c930e webcam</br>
 Prosthetic arm with 5 SG90 servos</br>
-
-Asus ROG Zephyrus G14 GA401IV</br>
-CPU : AMD Ryzen 9 4900HS </br>
-iGPU : AMD ATI 04:00.0 Renoir</br>
-GPU : NVIDIA GeForce RTX 2060 M</br>
-OS : Pop_OS 22.04</br>
+2x 470μF capacitors
 
 ## External links 
 Mediapipe API</br>
